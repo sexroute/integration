@@ -1,26 +1,6 @@
-function [ output_args ] = computeIntRMS( input_args )
-% TransFunGen_AccFs2560.m
-% 改自TransFunGen_AccFs5120.m
-% 一般用数字积分器
-% 
-% 直接对2560Hz信号积分，不降采样
-% 该方案缺点——点数多，优点：计算步骤少。
+function [ output_args ] = resultVerify( input_args )
 
- 
-
-% DataDir  = 'D:\FengKun\MATLABWORK\MyGeneralFunctions\ExamplesAndTests\IntegralCalculus\IFFTCoefs\';
-% DataName = 'IFFTIntWithHPCoefs_5120Hz_Re.txt';
-% load([DataDir,DataName])
-% DataName = 'IFFTIntWithHPCoefs_5120Hz_Im.txt';
-% load([DataDir,DataName])
-
-
-
-%
-
-%调取数据
-
-
+G_Param = input_args;
 % x=load('N205(1)BOF150(A)_n1800Fs20KNs80K.txt');
 % Ns = 16384;
 % x=10*x(1:Ns);   %单位 m/s^2
@@ -34,7 +14,7 @@ function [ output_args ] = computeIntRMS( input_args )
 
 load ('Tian_Vib_acc_data_5120.txt')
 x=Tian_Vib_acc_data_5120;
-close all;
+
 %%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%一般需求%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -44,15 +24,15 @@ FsQP=Fs/QP;
 SamTime=0.8; %采集的数据时间长度，单位:s
 % 加速度积分为速度的电路参数   /   QP=8时采用 转折点约在10Hz
 % 参数调节必须保证R2=R3，且C1、C2、C3同比例变化（越小则转折点越向高频移动）
-R1=input_args(1);   % Ω 欧姆
-R2=input_args(2);   % Ω 欧姆
-R3=input_args(3);      % Ω 欧姆
-C123Factor=input_args(4);
-C1=input_args(5);  %F 法拉 
-C2=input_args(6);  %F 法拉
-C3=input_args(7);   %F 法拉
-fXmin=input_args(8);
-ReCorrFactor=input_args(9);
+R1=G_Param(1);   % Ω 欧姆
+R2=G_Param(2);   % Ω 欧姆
+R3=G_Param(3);      % Ω 欧姆
+C123Factor=G_Param(4);
+C1=G_Param(5);  %F 法拉 
+C2=G_Param(6);  %F 法拉
+C3=G_Param(7);   %F 法拉
+fXmin=G_Param(8);
+ReCorrFactor=G_Param(9);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%一般需求%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -106,7 +86,6 @@ ReCorrFactor=(2*pi*f0)^(-1)/frsp;
 %绘制积分器频率响应
 clc
 figure('Units','centimeters','PaperPosition',[5, 5, 15, 15],'Position',[5, 5, 15, 12.5]);
-%h2=bode(HzSys,{0.1 10e4});
 h= bodeplot(HzSys,{0.1 10e4});
 % setoptions(h,'FreqUnits','Hz')
 setoptions(h,'MagScale','linear')
@@ -114,91 +93,30 @@ setoptions(h,'MagUnits','abs')
 
 ResponsesData=h.Responses.data;
 FrequencyX=ResponsesData.Frequency/2/pi;
+subplot(211)
 
 
-% 幅值差
-loZ1 = ResponsesData.Magnitude;
+semilogx(FrequencyX,ResponsesData.Magnitude,'LineWidth',2.5);    % 实际结果 ResponsesData.Magnitude
+grid minor
+xlim([fXmin FsQP/2.56])
+ylim([0 max(ResponsesData.Magnitude)*1.5])
+hold on
+k = load('ideal.txt');
+semilogx(FrequencyX,k,'r--');    % 理想目标 1./(ResponsesData.Frequency)  10Hz以上有效！
 
-loZ2 = load('ideal.txt');
+legend('低频抑制积分器响应','理想积分器响应(1/2\pif)');
+xlabel('Frequency/Hz');
+ylabel('Magnitude/abs');
+subplot(212)
+k = load('idealp.txt');
+semilogx(FrequencyX,k,'r--');
+xlabel('Frequency/Hz');
+ylabel('Phase/deg');
+semilogx(FrequencyX,ResponsesData.Phase*180/pi,'LineWidth',2.5);
+hold on
 
+% % 以下风格操作参数 见帮助Customizing Response Plots from the Command Line
 
-lnZ1 = length(loZ1);
-lnZ2 = length(loZ2);
-
-if lnZ1>lnZ2
-    
-    lnZ1 = lnZ2
-end
-    
-
-loZ1 = loZ1(26:lnZ1);
-loZ2 = loZ2(26:lnZ1);
-
-lnZ1Max = max(loZ1);
-lnZ2Max = max(loZ2);
-
-if lnZ1Max<lnZ2Max
-lnZ1Max = lnZ2Max;
-end
-
-lnZ1Min = min(loZ1);
-lnZ2Min = min(loZ2);
-
-if lnZ1Min>lnZ2Min
-lnZ1Min = lnZ2Min;
-end
-
-loZ1 = (loZ1-lnZ1Min)/(lnZ1Max-lnZ1Min);
-loZ2 = (loZ2-lnZ1Min)/(lnZ1Max-lnZ1Min);
-
-loZ3 = mean((loZ1 - loZ2).^2);
-
-
-% 相位差
-loZ2 = load('idealp.txt');
-
-
-loZ1 = ResponsesData.Phase*180/pi;
-
-lnZ1 = length(loZ1);
-lnZ2 = length(loZ2);
-
-if lnZ1>lnZ2
-    
-    lnZ1 = lnZ2
-end
-    
-
-loZ1 = loZ1(26:lnZ1);
-loZ2 = loZ2(26:lnZ1);
-
-lnZ1Max = max(loZ1);
-lnZ2Max = max(loZ2);
-
-if lnZ1Max<lnZ2Max
-lnZ1Max = lnZ2Max;
-end
-
-lnZ1Min = min(loZ1);
-lnZ2Min = min(loZ2);
-
-if lnZ1Min>lnZ2Min
-lnZ1Min = lnZ2Min;
-end
-
-loZ1 = (loZ1-lnZ1Min)/(lnZ1Max-lnZ1Min);
-loZ2 = (loZ2-lnZ1Min)/(lnZ1Max-lnZ1Min);
-
-loZ33 = mean((loZ1 - loZ2).^2);
-
-output_args = loZ3;
-data = output_args
-
-
-
-
-
-
-
-end
-
+grid minor
+xlim([fXmin FsQP/2.56])
+output_args = G_Param

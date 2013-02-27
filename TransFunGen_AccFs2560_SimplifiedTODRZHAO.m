@@ -119,10 +119,15 @@ xlim([fXmin FsQP/2.56])
 ylim([0 max(ResponsesData.Magnitude)*1.5])
 hold on
 semilogx(FrequencyX,1./(ResponsesData.Frequency),'r--');    % 理想目标 1./(ResponsesData.Frequency)  10Hz以上有效！
+H1 =1./(ResponsesData.Frequency);
+save('ideal.txt','H1','-ascii');
+
 legend('低频抑制积分器响应','理想积分器响应(1/2\pif)');
 xlabel('Frequency/Hz');
 ylabel('Magnitude/abs');
 subplot(212)
+P1= -90*ones(size(FrequencyX));
+save('idealp.txt','P1','-ascii');
 semilogx(FrequencyX,ResponsesData.Phase*180/pi,'LineWidth',2.5);
 hold on
 semilogx(FrequencyX,-90*ones(size(FrequencyX)),'r--');

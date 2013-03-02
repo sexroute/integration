@@ -104,20 +104,20 @@ frsp = abs( evalfr(HzSys,exp(1i*2*pi*f0/FsQP)) );
 ReCorrFactor=(2*pi*f0)^(-1)/frsp;
 %
 %绘制积分器频率响应
-clc
-figure('Units','centimeters','PaperPosition',[5, 5, 15, 15],'Position',[5, 5, 15, 12.5]);
+%clc
+%figure('Units','centimeters','PaperPosition',[5, 5, 15, 15],'Position',[5, 5, 15, 12.5]);
 %h2=bode(HzSys,{0.1 10e4});
-h= bodeplot(HzSys,{0.1 10e4});
+[mag,phase,wout]= bode(HzSys,{0.1 10e4});
 % setoptions(h,'FreqUnits','Hz')
-setoptions(h,'MagScale','linear')
-setoptions(h,'MagUnits','abs')
+%setoptions(h,'MagScale','linear')
+%setoptions(h,'MagUnits','abs')
 
-ResponsesData=h.Responses.data;
-FrequencyX=ResponsesData.Frequency/2/pi;
+%ResponsesData=h.Responses.data;
+FrequencyX=wout/2/pi;
 
 
 % 幅值差
-loZ1 = ResponsesData.Magnitude;
+loZ1 = mag(1,1:end)';
 
 loZ2 = load('ideal.txt');
 
@@ -127,7 +127,7 @@ lnZ2 = length(loZ2);
 
 if lnZ1>lnZ2
     
-    lnZ1 = lnZ2
+    lnZ1 = lnZ2;
 end
     
 
@@ -158,14 +158,14 @@ loZ3 = mean((loZ1 - loZ2).^2);
 loZ2 = load('idealp.txt');
 
 
-loZ1 = ResponsesData.Phase*180/pi;
+loZ1 = phase*180/pi;
 
 lnZ1 = length(loZ1);
 lnZ2 = length(loZ2);
 
 if lnZ1>lnZ2
     
-    lnZ1 = lnZ2
+    lnZ1 = lnZ2;
 end
     
 
@@ -189,10 +189,10 @@ end
 loZ1 = (loZ1-lnZ1Min)/(lnZ1Max-lnZ1Min);
 loZ2 = (loZ2-lnZ1Min)/(lnZ1Max-lnZ1Min);
 
-loZ33 = mean((loZ1 - loZ2).^2);
+%loZ33 = mean((loZ1 - loZ2).^2);
 
-output_args = loZ3;
-data = output_args
+output_args = loZ3
+data = output_args;
 
 
 

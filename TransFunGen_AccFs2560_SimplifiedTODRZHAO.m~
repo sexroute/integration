@@ -130,19 +130,15 @@ xlim([fXmin FsQP/2.56])
 ylim([0 max(ResponsesData.Magnitude)*1.5])
 hold on
 lnFreq = length(ResponsesData.Frequency);
-z = FrequencyX;
 for i=1:lnFreq
-    if FrequencyX(i) <1.0
-        z(i) = 1./(ResponsesData.Frequency(i));
+    if ResponsesData.Frequency(i) <1.0
+        z(i) = 0.5*(ResponsesData.Frequency(i)^2);
     else
-        z(i) = 1./(ResponsesData.Frequency(i));
-    end
+        z(i) = ResponsesData.Frequency(i)
 end
-%semilogx(FrequencyX,1./(ResponsesData.Frequency),'r--');    % 理想目标 1./(ResponsesData.Frequency)  10Hz以上有效！
-semilogx(FrequencyX,z,'r--');    % 理想目标 1./(ResponsesData.Frequency)  10Hz以上有效！
-
+semilogx(FrequencyX,1./(ResponsesData.Frequency),'r--');    % 理想目标 1./(ResponsesData.Frequency)  10Hz以上有效！
 H1 =1./(ResponsesData.Frequency);
-save('./ideal.txt','z','-ascii');
+save('./ideal.txt','H1','-ascii');
 
 legend('低频抑制积分器响应','理想积分器响应(1/2\pif)');
 xlabel('Frequency/Hz');

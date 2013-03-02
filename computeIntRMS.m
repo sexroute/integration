@@ -32,27 +32,28 @@ function [ output_args ] = computeIntRMS( input_args )
 % 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load ('Tian_Vib_acc_data_5120.txt')
-x=Tian_Vib_acc_data_5120;
-close all;
+%load ('Tian_Vib_acc_data_5120.txt')
+%x=Tian_Vib_acc_data_5120;
+%close all;
 %%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%一般需求%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Fs=2560;    %
+Fs=load('freq.txt');    %
 QP=1;       %不重采样，直接积分
 FsQP=Fs/QP;
 SamTime=0.8; %采集的数据时间长度，单位:s
+G_FreqStartLimit = 45.0; %拟合起始值点
 % 加速度积分为速度的电路参数   /   QP=8时采用 转折点约在10Hz
 % 参数调节必须保证R2=R3，且C1、C2、C3同比例变化（越小则转折点越向高频移动）
 R1=input_args(1);   % Ω 欧姆
 R2=input_args(2);   % Ω 欧姆
 R3=input_args(3);      % Ω 欧姆
-C123Factor=input_args(4);
-C1=input_args(5);  %F 法拉 
-C2=input_args(6);  %F 法拉
-C3=input_args(7);   %F 法拉
-fXmin=input_args(8);
-ReCorrFactor=input_args(9);
+%C123Factor=input_args(4);
+C1=input_args(4);  %F 法拉 
+C2=input_args(5);  %F 法拉
+C3=input_args(6);   %F 法拉
+%fXmin=input_args(8);
+ReCorrFactor=input_args(7);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%一般需求%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -98,11 +99,11 @@ Ns=FsQP*SamTime;    %现场预定采样时间计算采样点数
 % ht_Int_TOL = ht_Int(end);  %理论上无限冲击响应不可能为0，最后一个越接近零，就越接近有限冲击响应。
 
 
-%
+%{
 f0=159.159;
 frsp = abs( evalfr(HzSys,exp(1i*2*pi*f0/FsQP)) );   
 ReCorrFactor=(2*pi*f0)^(-1)/frsp;
-%
+%}
 %绘制积分器频率响应
 %clc
 %figure('Units','centimeters','PaperPosition',[5, 5, 15, 15],'Position',[5, 5, 15, 12.5]);
@@ -113,7 +114,7 @@ ReCorrFactor=(2*pi*f0)^(-1)/frsp;
 %setoptions(h,'MagUnits','abs')
 
 %ResponsesData=h.Responses.data;
-FrequencyX=wout/2/pi;
+%FrequencyX=wout/2/pi;
 
 
 % 幅值差
@@ -129,10 +130,15 @@ if lnZ1>lnZ2
     
     lnZ1 = lnZ2;
 end
-    
-
-loZ1 = loZ1(26:lnZ1);
-loZ2 = loZ2(26:lnZ1);
+lnStartIndex = 1;
+for i=1:lnZ1
+    if wout(i)>G_FreqStartLimit
+       lnStartIndex = i;
+       break;
+    end
+end
+loZ1 = loZ1(lnStartIndex:lnZ1);
+loZ2 = loZ2(lnStartIndex:lnZ1);
 
 lnZ1Max = max(loZ1);
 lnZ2Max = max(loZ2);
@@ -151,7 +157,7 @@ end
 loZ1 = (loZ1-lnZ1Min)/(lnZ1Max-lnZ1Min);
 loZ2 = (loZ2-lnZ1Min)/(lnZ1Max-lnZ1Min);
 
-loZ3 = mean((loZ1 - loZ2).^2);
+loZ3 = mean((abs(loZ1 - loZ2)).^2);
 
 
 % 相位差
@@ -169,8 +175,8 @@ if lnZ1>lnZ2
 end
     
 
-loZ1 = loZ1(26:lnZ1);
-loZ2 = loZ2(26:lnZ1);
+loZ1 = loZ1(10:lnZ1);
+loZ2 = loZ2(10:lnZ1);
 
 lnZ1Max = max(loZ1);
 lnZ2Max = max(loZ2);

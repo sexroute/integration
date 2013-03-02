@@ -1,4 +1,9 @@
 clear;clc;close all;
+Fs = 2560;
+save('freq.txt','Fs','-ascii');
+starfs = 24.0;
+save('starfs.txt','starfs','-ascii');
+InitData();
 G_Param = [];
 G_Param(1) =150e3;   % ¦¸ Å·Ä·
 G_Param(2)=1.5e6;   % ¦¸ Å·Ä·

@@ -38,8 +38,8 @@ x=Tian_Vib_acc_data_5120;
 G_Param=[812165.503400006,3571942.85178784,6824607.78084325,-33.8375405315357,2.68136456829446e-06,3.36930781952723e-08,3.83118470309104e-12,-11.2865536356272,0.351366789402659];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%一般需求%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Fs=2560;    %
-save('freq.txt','Fs','-ascii');
+Fs=load('freq.txt');        %
+
 QP=1;       %不重采样，直接积分
 FsQP=Fs/QP;
 SamTime=0.8; %采集的数据时间长度，单位:s
@@ -124,7 +124,7 @@ setoptions(h,'MagUnits','abs')
 ResponsesData=h.Responses.data;
 FrequencyX=ResponsesData.Frequency/2/pi;
 subplot(211)
-semilogx(FrequencyX,ResponsesData.Magnitude,'LineWidth',2.5);    % 实际结果 ResponsesData.Magnitude
+semilogx(FrequencyX,ResponsesData.Magnitude,'LineWidth',1.5);    % 实际结果 ResponsesData.Magnitude
 grid minor
 xlim([fXmin FsQP/2.56])
 ylim([0 max(ResponsesData.Magnitude)*1.5])
@@ -150,7 +150,7 @@ ylabel('Magnitude/abs');
 subplot(212)
 P1= -90*ones(size(FrequencyX));
 save('./idealp.txt','P1','-ascii');
-semilogx(FrequencyX,ResponsesData.Phase*180/pi,'LineWidth',2.5);
+semilogx(FrequencyX,ResponsesData.Phase*180/pi,'LineWidth',1.5);
 hold on
 semilogx(FrequencyX,-90*ones(size(FrequencyX)),'r--');
 xlabel('Frequency/Hz');

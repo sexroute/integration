@@ -1,6 +1,26 @@
-function [ output_args ] = resultVerify( input_args )
+function [] = InitData()
+% TransFunGen_AccFs2560.m
+% 改自TransFunGen_AccFs5120.m
+% 一般用数字积分器
+% 
+% 直接对2560Hz信号积分，不降采样
+% 该方案缺点——点数多，优点：计算步骤少。
 
-G_Param = input_args;
+clear,clc,close all  
+
+% DataDir  = 'D:\FengKun\MATLABWORK\MyGeneralFunctions\ExamplesAndTests\IntegralCalculus\IFFTCoefs\';
+% DataName = 'IFFTIntWithHPCoefs_5120Hz_Re.txt';
+% load([DataDir,DataName])
+% DataName = 'IFFTIntWithHPCoefs_5120Hz_Im.txt';
+% load([DataDir,DataName])
+
+
+
+%
+
+%调取数据
+clc
+
 % x=load('N205(1)BOF150(A)_n1800Fs20KNs80K.txt');
 % Ns = 16384;
 % x=10*x(1:Ns);   %单位 m/s^2
@@ -16,27 +36,38 @@ load ('Tian_Vib_acc_data_5120.txt')
 x=Tian_Vib_acc_data_5120;
 
 %%
+G_Param=[812165.503400006,3571942.85178784,6824607.78084325,-33.8375405315357,2.68136456829446e-06,3.36930781952723e-08,3.83118470309104e-12,-11.2865536356272,0.351366789402659];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%一般需求%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Fs=load('freq.txt');    %
+Fs=load('freq.txt');        %
+
 QP=1;       %不重采样，直接积分
 FsQP=Fs/QP;
 SamTime=0.8; %采集的数据时间长度，单位:s
 % 加速度积分为速度的电路参数   /   QP=8时采用 转折点约在10Hz
 % 参数调节必须保证R2=R3，且C1、C2、C3同比例变化（越小则转折点越向高频移动）
+R1=150e3;   % Ω 欧姆
+R2=1.5e6;   % Ω 欧姆
+R3=R2;      % Ω 欧姆
+C123Factor=1;
+C1=C123Factor*120e-9;  %F 法拉 
+C2=C123Factor*6.8e-9;  %F 法拉
+C3=C123Factor*18e-9;   %F 法拉 
+fXmin=1;
+ReCorrFactor=0.0204*1.00011*1.0108;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%一般需求%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%{
 R1=G_Param(1);   % Ω 欧姆
 R2=G_Param(2);   % Ω 欧姆
 R3=G_Param(3);      % Ω 欧姆
-%C123Factor=G_Param(4);
-C1=G_Param(4);  %F 法拉 
-C2=G_Param(5);  %F 法拉
-C3=G_Param(6);   %F 法拉
-%fXmin=G_Param(8);
-ReCorrFactor=G_Param(7);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%一般需求%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
+C123Factor=G_Param(4);
+C1=G_Param(5);  %F 法拉 
+C2=G_Param(6);  %F 法拉
+C3=G_Param(7);   %F 法拉 
+fXmin=1;
+ReCorrFactor=G_Param(9);
+%}
 % % 加速度积分为速度的电路参数   /   QP=8时采用 转折点约在10Hz
 % 参数调节必须保证R2=R3，且C1、C2、C3同比例 变化（越小则转折点越向高频移动）
 % R1=150e3; % Ω 欧姆
@@ -85,7 +116,7 @@ ReCorrFactor=(2*pi*f0)^(-1)/frsp;
 %
 %绘制积分器频率响应
 clc
-figure('Units','centimeters','PaperPosition',[5, 5, 15, 15],'Position',[5, 5, 15, 12.5]);
+figure('Units','centimeters','PaperPosition',[5, 5, 15, 15],'Position',[5, 5, 15, 12.5],'name','Init');
 h= bodeplot(HzSys,{0.1 10e4});
 % setoptions(h,'FreqUnits','Hz')
 setoptions(h,'MagScale','linear')
@@ -94,39 +125,43 @@ setoptions(h,'MagUnits','abs')
 ResponsesData=h.Responses.data;
 FrequencyX=ResponsesData.Frequency/2/pi;
 subplot(211)
-
-
 semilogx(FrequencyX,ResponsesData.Magnitude,'LineWidth',1.5);    % 实际结果 ResponsesData.Magnitude
 grid minor
-xlim([0 FsQP/2.56])
+xlim([fXmin FsQP/2.56])
 ylim([0 max(ResponsesData.Magnitude)*1.5])
 hold on
-k = load('ideal.txt');
-lnIdeal = length(k);
-lnFreq = length(FrequencyX);
-if lnIdeal>lnFreq
-    lnIdeal = lnFreq;
+lnFreq = length(ResponsesData.Frequency);
+z = FrequencyX;
+for i=1:lnFreq
+    if FrequencyX(i) <1.0
+        z(i) = 1./(ResponsesData.Frequency(i));
+    else
+        z(i) = 1./(ResponsesData.Frequency(i));
+    end
 end
-semilogx(FrequencyX(1:lnIdeal),k(1:lnIdeal),'r--');    % 理想目标 1./(ResponsesData.Frequency)  10Hz以上有效！
+%semilogx(FrequencyX,1./(ResponsesData.Frequency),'r--');    % 理想目标 1./(ResponsesData.Frequency)  10Hz以上有效！
+semilogx(FrequencyX,z,'r--');    % 理想目标 1./(ResponsesData.Frequency)  10Hz以上有效！
+
+H1 =1./(ResponsesData.Frequency);
+save('./ideal.txt','z','-ascii');
 
 legend('低频抑制积分器响应','理想积分器响应(1/2\pif)');
 xlabel('Frequency/Hz');
 ylabel('Magnitude/abs');
 subplot(212)
-k = load('idealp.txt');
-lnIdeal = length(k);
-lnFreq = length(FrequencyX);
-if lnIdeal>lnFreq
-    lnIdeal = lnFreq;
-end
-semilogx(FrequencyX(1:lnIdeal),k(1:lnIdeal),'r--');
-xlabel('Frequency/Hz');
-ylabel('Phase/deg');
+P1= -90*ones(size(FrequencyX));
+save('./idealp.txt','P1','-ascii');
 semilogx(FrequencyX,ResponsesData.Phase*180/pi,'LineWidth',1.5);
 hold on
-
+semilogx(FrequencyX,-90*ones(size(FrequencyX)),'r--');
+xlabel('Frequency/Hz');
+ylabel('Phase/deg');
 % % 以下风格操作参数 见帮助Customizing Response Plots from the Command Line
 
 grid minor
-xlim([0 FsQP/2.56])
-output_args = G_Param
+xlim([fXmin FsQP/2.56])
+% print -dtiff -r600 HzFreqResponse
+
+
+
+

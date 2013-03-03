@@ -1,5 +1,5 @@
 clear;clc;close all;
-Fs = 2560;
+Fs = 80;
 save('freq.txt','Fs','-ascii');
 starfs = 24.0;
 save('starfs.txt','starfs','-ascii');
